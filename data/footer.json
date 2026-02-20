@@ -18,7 +18,7 @@
               "targetBlank": true
             },
             {
-              "link": "https://docs.lightchain.ai/lightchain-docs/audits",
+              "link": "https://docs.lightchain.ai/docs/getting-started/audits",
               "text": "Audits"
             },
             {
@@ -98,7 +98,7 @@
             {
               "text": "Community Site",
               "icon": "/images/icons/community-icon.svg",
-              "link": "https://lightchain.community/"
+              "link": "https://forum.lightchain.ai/"
             }
           ]
         }

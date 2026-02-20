@@ -73,7 +73,7 @@ const NavList = () => {
                   <li>
                     <a
                       className="lcai-nav-card"
-                      href="https://docs.lightchain.ai/lightchain-docs/audits"
+                      href="https://docs.lightchain.ai/docs/getting-started/audits"
                     >
                       <span className="icon bg-flashlight-static">
                         <i className="fa-regular fa-shield-alt"></i>
