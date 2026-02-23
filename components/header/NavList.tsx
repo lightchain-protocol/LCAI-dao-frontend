@@ -63,34 +63,6 @@ function renderCol(col: RawNavCol, colIdx: number) {
     );
   }
 
-  if (col.type === "imageCard") {
-    return (
-      <div key={colIdx} className="news-card">
-        <div className="inner">
-          <Link href={col.href} className="card-image">
-            <Image
-              src={col.img}
-              alt={col.title}
-              width={500}
-              height={500}
-            />
-            {col.badge && (
-              <div className="lightchain-badge lightchain-badge-border position-top-left-20">
-                {col.badge}
-              </div>
-            )}
-          </Link>
-          <div className="card-content">
-            {col.meta && <div className="meta-text text-white">{col.meta}</div>}
-            <h5 className="title">
-              <Link href={col.href}>{col.title}</Link>
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return null;
 }
 
@@ -144,7 +116,7 @@ const NavList = ({ rawMenus }: Props) => {
               <div
                 className={`lightchain-megamenu right-align ${widthClass(menu.width)} ${
                   activeMenu === idx ? "d-block" : ""
-                }`}
+                } ${menu.label === "Lightchain" ? "small" : ""}`}
               >
                 <div className="wrapper p-0">
                   {menu.width === "xwide" ? (
@@ -156,6 +128,8 @@ const NavList = ({ rawMenus }: Props) => {
                           prevCol && prevCol.type === "title"
                             ? prevCol.title
                             : undefined;
+
+                        if (col.type === "imageCard") return null;
                         return (
                           <div key={ci} className="col-sm single-mega-item">
                             {heading && (
@@ -175,8 +149,10 @@ const NavList = ({ rawMenus }: Props) => {
                           prevCol && prevCol.type === "title"
                             ? prevCol.title
                             : undefined;
+
+                        if (col.type === "imageCard") return null;
                         return (
-                          <div key={ci} className="col-md single-mega-item">
+                          <div key={ci} className="w-full flex-1 single-mega-item">
                             {heading && (
                               <h5 className="lcai-short-title">{heading}</h5>
                             )}
