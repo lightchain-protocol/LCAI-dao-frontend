@@ -1,57 +1,41 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import logoLight from "../../public/images/logo/logo.svg";
 import logoDark from "../../public/images/logo/logo-dark.svg";
 
 import SingleFooter from "./FooterProps/SingleFooter";
-import { fetchFooterConfig } from "@/lib/footer/fetchFooterConfig";
-import { socialIconMap } from "@/lib/footer/socialIconMap";
-import { resolveTarget } from "@/lib/nav/resolveTarget";
+import FooterData from "../../data/footer.json";
+// Define types for FooterData
+interface FooterDataItem {
+  title: string;
+  desc: string;
+  services: Array<any>;
+  products: Array<any>;
+  company: Array<any>;
+  solutions: Array<any>;
+}
 
-const Footer = async () => {
-  const raw = await fetchFooterConfig();
+interface FooterDataType {
+  footer: FooterDataItem[];
+}
 
-  const toItems = (col: (typeof raw.columns)[number]) => [
-    {
-      title: col.title,
-      top: col.style === "top",
-      innerItem: col.links.map((link) => ({
-        text: link.text,
-        link: link.href,
-        targetBlank: resolveTarget(link.href, link.target) === "_blank",
-      })),
-    },
-  ];
-
-  const services = toItems(raw.columns[0]);
-  const products = toItems(raw.columns[1]);
-  const solutions = [...toItems(raw.columns[2]), ...toItems(raw.columns[3])];
-  const company = [
-    {
-      title: "Socials",
-      top: true,
-      innerItem: raw.social
-        .filter((s) => socialIconMap[s.iconKey])
-        .map((s) => ({
-          text: s.text,
-          link: s.href,
-          icon: socialIconMap[s.iconKey],
-          targetBlank: true,
-        })),
-    },
-  ];
-
+const Footer = () => {
   return (
     <>
       <footer className="lightchain-footer footer-style-default footer-style-3 position-relative mt-0 variation-2 bg-one">
         <div className="footer-top">
           <div className="container">
-            <div className="display-flex pb-6 justify-between">
-              <SingleFooter data={services} />
-              <SingleFooter data={products} />
-              <SingleFooter data={solutions} />
-              <SingleFooter data={company} />
-            </div>
+            {FooterData &&
+              (FooterData as FooterDataType).footer.map((data, index) => (
+                <div className="display-flex pb-6 justify-between" key={index}>
+                  <SingleFooter data={data.services} />
+                  <SingleFooter data={data.products} />
+                  <SingleFooter data={data.solutions} />
+                  <SingleFooter data={data.company} />
+                </div>
+              ))}
             <div className="separator-animated variation-2 height-1 animated-true mt_sm--20 mt--70 mb--30 mt_md--30 mb_md--20 sm--30 mb_sm--20"></div>
             <div className="display-flex justify-content-between">
               <div className="w-full sm:w-full md:w-1/2 lg:w-1/3">

@@ -1,0 +1,157 @@
+{
+  "footer": [
+    {
+      "desc": "Stay up to date with Lightchain AI",
+      "title": "Newsletter ✉️",
+      "services": [
+        {
+          "title": "Useful links",
+          "top": true,
+          "innerItem": [
+            {
+              "link": "https://docs.lightchain.ai",
+              "text": "Documentation"
+            },
+            {
+              "link": "https://lightchain.ai/lightchain-whitepaper.pdf",
+              "text": "Whitepaper",
+              "targetBlank": true
+            },
+            {
+              "link": "https://docs.lightchain.ai/lightchain-docs/audits",
+              "text": "Audits"
+            },
+            {
+              "link": "https://testnet.lightscan.app/api-docs",
+              "text": "API References"
+            },
+            {
+              "link": "https://deploy.lightchain.ai/",
+              "text": "IDE",
+              "targetBlank": true
+            },
+            {
+              "link": "https://lightchain.ai/#faq-setion",
+              "text": "FAQs"
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "title": "Presale",
+          "top": false,
+          "innerItem": [
+            {
+              "text": "Support",
+              "link": "https://Discord.gg/lightchain"
+            },
+            {
+              "text": "Win $100K",
+              "link": "https://lightchain.ai/join"
+            },
+            {
+              "text": "Developer Grants",
+              "link": "https://lightchain.ai/grant"
+            },
+            {
+              "text": "Privacy Policy",
+              "link": "https://lightchain.ai/privacy-policy"
+            },
+            {
+              "text": "Risk Disclosures",
+              "link": "https://lightchain.ai/risk-disclosures"
+            },
+            {
+              "text": "Terms and Conditions",
+              "link": "https://lightchain.ai/terms-and-conditions"
+            }
+          ]
+        }
+      ],
+      "company": [
+        {
+          "title": "Socials",
+          "top": true,
+          "innerItem": [
+            {
+              "text": "Twitter (X)",
+              "icon": "/images/icons/x-icons-2.svg",
+              "link": "https://x.com/LightchainAI"
+            },
+            {
+              "text": "Discord",
+              "icon": "/images/icons/discord-icon-svgrepo-com.svg",
+              "link": "https://Discord.gg/lightchain"
+            },
+            {
+              "text": "Linktree",
+              "icon": "/images/icons/linktree-icon.svg",
+              "link": "https://linktr.ee/lightchainai"
+            },
+
+            {
+              "text": "CoinMarketCap",
+              "icon": "/images/icons/market-cap-icon.svg",
+              "link": "https://coinmarketcap.com/community/profile/lightchainai/"
+            },
+            {
+              "text": "Community Site",
+              "icon": "/images/icons/community-icon.svg",
+              "link": "https://lightchain.community/"
+            }
+          ]
+        }
+      ],
+      "solutions": [
+        {
+          "title": "Blockchain",
+          "top": false,
+          "innerItem": [
+            {
+              "text": "Explorer (Testnet)",
+              "link": "https://testnet.lightscan.app"
+            },
+            {
+              "text": "Contract Verifier",
+              "link": "https://testnet.lightscan.app/contract-verification"
+            },
+            {
+              "text": "Faucet",
+              "link": "https://lightfaucet.ai"
+            },
+            {
+              "text": "External Wallet (soon)",
+              "link": "#"
+            },
+            {
+              "text": "Bridge",
+              "link": "https://bridge-testnet.lightchain.ai/"
+            },
+            {
+              "text": "API Docs",
+
+              "link": "https://testnet.lightscan.app/api-docs"
+            }
+          ]
+        },
+        {
+          "title": "Community",
+          "top": false,
+          "innerItem": [
+            {
+              "text": "Forum",
+              "link": "https://forum.lightchain.ai/",
+              "targetBlank": true
+            },
+            {
+              "text": "Governance Voting",
+              "link": "/",
+              "targetBlank": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
