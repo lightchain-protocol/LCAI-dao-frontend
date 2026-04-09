@@ -1,7 +1,13 @@
 import { ProposalState, ProposalStateLabel } from "@/lib/constents";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleXmark, faHourglassClock, faHourglassHalf, faSignalStream, faSquareCheck } from "@fortawesome/pro-regular-svg-icons";
+import {
+  faCircleXmark,
+  faHourglassClock,
+  faHourglassHalf,
+  faSignalStream,
+  faSquareCheck,
+} from "@fortawesome/pro-regular-svg-icons";
 import { cn } from "@/lib/utils";
 
 type Props = {

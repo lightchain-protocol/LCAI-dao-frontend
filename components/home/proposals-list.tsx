@@ -13,7 +13,7 @@ import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
 import { useConnection } from "wagmi";
 import { Button } from "@/components/common/Button";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faPlus } from "@fortawesome/pro-regular-svg-icons";
 import ProposalFilter from "@/components/proposal/ProposalFilter";
 import type { ProposalFilters } from "@/components/proposal/ProposalFilter";
 import { ProposalListItem } from "@/components/proposal/proposal-list-item";

@@ -20,19 +20,19 @@ import {
   faArrowDownWideShort,
   faBan,
   faBolt,
-  faChartLine,
   faCircleCheck,
   faCircleInfo,
   faCircleXmark,
-  faClock,
   faClockRotateLeft,
+  faGrid2Plus,
+  faHourglassClock,
   faHourglassHalf,
   faMagnifyingGlass,
   faPlus,
+  faSignalStream,
   faSliders,
   faSquareCheck,
-  faTableCells,
-} from "@fortawesome/free-solid-svg-icons";
+} from "@fortawesome/pro-regular-svg-icons";
 import type { ProposalSortOption } from "@/types";
 
 export interface ProposalFilters {
@@ -90,14 +90,14 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               <SelectItem value="all" className={selectItemClass}>
                 <FontAwesomeIcon
                   className="inline-block size-4"
-                  icon={faTableCells}
+                  icon={faGrid2Plus}
                 />
                 All
               </SelectItem>
               <SelectItem value="active" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-light"
-                  icon={faChartLine}
+                  className="inline-block size-4 text-content-success-strong"
+                  icon={faSignalStream}
                 />
                 Active
               </SelectItem>
@@ -110,7 +110,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               </SelectItem>
               <SelectItem value="succeeded" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-light"
+                  className="inline-block size-4 text-content-success-strong"
                   icon={faSquareCheck}
                 />
                 Succeeded
@@ -118,7 +118,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               <SelectItem value="queued" className={selectItemClass}>
                 <FontAwesomeIcon
                   className="inline-block size-4"
-                  icon={faClock}
+                  icon={faHourglassClock}
                 />
                 Queued
               </SelectItem>
@@ -145,7 +145,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               </SelectItem>
               <SelectItem value="executed" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-light"
+                  className="inline-block size-4 text-content-success-strong"
                   icon={faCircleCheck}
                 />
                 Executed

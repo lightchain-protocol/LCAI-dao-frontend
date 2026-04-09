@@ -9,7 +9,7 @@ import ProposalStatusBadge from "@/components/proposal/proposal-status-badge";
 import { ProposalState, ProposalStateLabel } from "@/lib/constents";
 import type { Proposal } from "@/types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
+import { faSparkle } from "@fortawesome/pro-regular-svg-icons";
 
 interface ProposalListItemProps {
   proposal: Proposal;
@@ -72,7 +72,7 @@ export function ProposalListItem({
           </span>
         </div>
         <span className="hidden sm:block">
-          <FontAwesomeIcon icon={faWandMagicSparkles} className="size-3.5" />
+          <FontAwesomeIcon icon={faSparkle} className="size-3.5" />
         </span>
         <div className="flex items-center gap-1">
           <span className="text-content-primary sm:text-base text-sm">by</span>
@@ -85,7 +85,7 @@ export function ProposalListItem({
           </Badge>
         </div>
         <span className="hidden sm:block">
-          <FontAwesomeIcon icon={faWandMagicSparkles} className="size-3.5" />
+          <FontAwesomeIcon icon={faSparkle} className="size-3.5" />
         </span>
         <div className="flex items-center gap-1">
           <Users className="h-4 w-4 sm:text-base text-sm" />
@@ -98,7 +98,7 @@ export function ProposalListItem({
           proposal.state === ProposalState.Active) && (
             <>
               <span className="hidden sm:block">
-                <FontAwesomeIcon icon={faWandMagicSparkles} className="size-3.5" />
+                <FontAwesomeIcon icon={faSparkle} className="size-3.5" />
               </span>
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4 sm:text-base text-sm" />
@@ -119,7 +119,7 @@ export function ProposalListItem({
         {voteParticipationBadge && (
           <span className="inline-flex items-center gap-x-2 animate-in fade-in-0 duration-300 motion-reduce:animate-none motion-reduce:opacity-100">
             <span className="hidden sm:block">
-              <FontAwesomeIcon icon={faWandMagicSparkles} className="size-3.5" />
+              <FontAwesomeIcon icon={faSparkle} className="size-3.5" />
             </span>
             {voteParticipationBadge.voted ? (
               <Badge
