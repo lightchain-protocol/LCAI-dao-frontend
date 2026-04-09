@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Select,
@@ -6,23 +8,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { Button } from "../common/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { cn } from "@/lib/utils";
 import {
   faArrowDownWideShort,
   faBan,
+  faBolt,
+  faChartLine,
   faCircleCheck,
+  faCircleInfo,
   faCircleXmark,
+  faClock,
   faClockRotateLeft,
-  faGrid2Plus,
-  faHourglassClock,
   faHourglassHalf,
   faMagnifyingGlass,
   faPlus,
-  faSignalStream,
   faSliders,
   faSquareCheck,
-} from "@fortawesome/pro-regular-svg-icons";
+  faTableCells,
+} from "@fortawesome/free-solid-svg-icons";
 import type { ProposalSortOption } from "@/types";
 
 export interface ProposalFilters {
@@ -80,14 +90,14 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               <SelectItem value="all" className={selectItemClass}>
                 <FontAwesomeIcon
                   className="inline-block size-4"
-                  icon={faGrid2Plus}
+                  icon={faTableCells}
                 />
                 All
               </SelectItem>
               <SelectItem value="active" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-strong"
-                  icon={faSignalStream}
+                  className="inline-block size-4 text-content-success-light"
+                  icon={faChartLine}
                 />
                 Active
               </SelectItem>
@@ -100,7 +110,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               </SelectItem>
               <SelectItem value="succeeded" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-strong"
+                  className="inline-block size-4 text-content-success-light"
                   icon={faSquareCheck}
                 />
                 Succeeded
@@ -108,7 +118,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               <SelectItem value="queued" className={selectItemClass}>
                 <FontAwesomeIcon
                   className="inline-block size-4"
-                  icon={faHourglassClock}
+                  icon={faClock}
                 />
                 Queued
               </SelectItem>
@@ -135,7 +145,7 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
               </SelectItem>
               <SelectItem value="executed" className={selectItemClass}>
                 <FontAwesomeIcon
-                  className="inline-block size-4 text-content-success-strong"
+                  className="inline-block size-4 text-content-success-light"
                   icon={faCircleCheck}
                 />
                 Executed
@@ -148,14 +158,54 @@ const ProposalFilter = ({ filters, onFilterChange }: ProposalFilterProps) => {
             onValueChange={(v) => onFilterChange("sortBy", v)}
             value={filters.sortBy}
           >
-            <SelectTrigger className={selectTriggerClass}>
+            <SelectTrigger
+              className={cn(selectTriggerClass, "gap-1.5 [&_[data-slot=select-value]]:min-w-0")}
+            >
               <FontAwesomeIcon
-                className="inline-block size-4 mr-1"
+                className="inline-block size-4 shrink-0"
                 icon={faArrowDownWideShort}
               />
-              <SelectValue placeholder="Newest" />
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                <SelectValue placeholder="Newest" />
+                {filters.sortBy === "priority-desc" && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-content-secondary hover:text-content-primary inline-flex shrink-0 rounded-full p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="What Priority sort means"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <FontAwesomeIcon
+                          icon={faCircleInfo}
+                          className="pointer-events-none size-3.5"
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      sideOffset={6}
+                      className="max-w-[min(20rem,calc(100vw-2rem))] text-pretty"
+                    >
+                      Priority = proposals needing your vote, ending soonest
+                      first
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
             </SelectTrigger>
             <SelectContent className={selectContentClass}>
+              <SelectItem
+                value="priority-desc"
+                className={selectItemClass}
+                title="Priority = proposals needing your vote, ending soonest first"
+              >
+                <FontAwesomeIcon
+                  className="inline-block size-4 text-content-warning-light"
+                  icon={faBolt}
+                />
+                Priority
+              </SelectItem>
               <SelectItem value="created-desc" className={selectItemClass}>
                 Newest First
               </SelectItem>

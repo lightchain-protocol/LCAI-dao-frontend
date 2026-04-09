@@ -1,36 +1,60 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  useDeferredValue,
+} from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
 import { useConnection } from "wagmi";
 import { Button } from "@/components/common/Button";
-import { faPlus } from "@fortawesome/pro-regular-svg-icons";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import ProposalFilter from "@/components/proposal/ProposalFilter";
 import type { ProposalFilters } from "@/components/proposal/ProposalFilter";
 import { ProposalListItem } from "@/components/proposal/proposal-list-item";
 import LoadingBlock from "@/components/loading-block";
 import useGraphqlApi from "@/hooks/useGraphqlApi";
+import { useGovernorHasVotedBatch } from "@/hooks/useGovernorHasVotedBatch";
+import { sortProposalsByPriorityDesc } from "@/lib/sortProposalsByPriorityDesc";
+import { cn } from "@/lib/utils";
+import { ProposalState } from "@/lib/constents";
 import type { ProposalSortOption, ProposalsFilter } from "@/types";
 
 interface ProposalsListProps {
   spaceId: string;
+  /** Increment from parent (e.g. sidebar) to apply Active status filter when opening this tab. */
+  activeListFocusToken?: number;
 }
 
-export function ProposalsList({ spaceId }: ProposalsListProps) {
+export function ProposalsList({
+  spaceId,
+  activeListFocusToken = 0,
+}: ProposalsListProps) {
   const { theme } = useTheme();
   const api = useGraphqlApi();
-  const { address } = useConnection();
+  const { address, isConnected } = useConnection();
 
   const [filters, setFilters] = useState<ProposalFilters>({
     status: "all",
     createdBy: "all",
     search: "",
-    sortBy: "created-desc",
+    sortBy: "priority-desc",
     hasExecution: "all",
     minVotes: "",
   });
+
+  const lastActiveFocusToken = useRef(0);
+  useEffect(() => {
+    if (activeListFocusToken > lastActiveFocusToken.current) {
+      lastActiveFocusToken.current = activeListFocusToken;
+      setFilters((prev) => ({ ...prev, status: "active" }));
+    }
+  }, [activeListFocusToken]);
 
   const handleFilterChange = useCallback((name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -65,7 +89,7 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
     return f;
   }, [filters.status, filters.minVotes]);
 
-  const { isLoading, data: proposals = [] } = useQuery({
+  const { isLoading, data: proposalsFromApi = [] } = useQuery({
     queryKey: [
       "proposals-list",
       filters.search,
@@ -79,9 +103,11 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
         Math.floor(Date.now() / 1000),
         apiFilter,
         filters.search,
-        filters.sortBy as ProposalSortOption
+        filters.sortBy as ProposalSortOption,
       ),
   });
+
+  const proposals = proposalsFromApi;
 
   // Client-side filtering for createdBy (needs wallet address) and hasExecution
   const filteredProposals = useMemo(() => {
@@ -123,6 +149,45 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
     });
   }, [proposals, filters.status, filters.createdBy, filters.hasExecution, address]);
 
+  const proposalIdsForVoteLookup = useMemo(() => {
+    if (filters.sortBy === "priority-desc") {
+      return filteredProposals.map((p) => p.proposal_id);
+    }
+    return filteredProposals
+      .filter((p) => p.state === ProposalState.Active)
+      .map((p) => p.proposal_id);
+  }, [filteredProposals, filters.sortBy]);
+
+  const { byProposalId, isLoading: voteBatchLoading } =
+    useGovernorHasVotedBatch(proposalIdsForVoteLookup);
+
+  const sortedFilteredProposals = useMemo(() => {
+    if (filters.sortBy !== "priority-desc") {
+      return filteredProposals;
+    }
+    return sortProposalsByPriorityDesc(filteredProposals, {
+      isConnected,
+      address,
+      byProposalId,
+      voteBatchLoading,
+    });
+  }, [
+    filteredProposals,
+    filters.sortBy,
+    byProposalId,
+    voteBatchLoading,
+    address,
+    isConnected,
+  ]);
+
+  const displayProposals = useDeferredValue(sortedFilteredProposals);
+
+  const priorityVoteSortPending =
+    filters.sortBy === "priority-desc" &&
+    isConnected &&
+    !!address &&
+    voteBatchLoading;
+
   return (
     <div>
       <ProposalFilter filters={filters} onFilterChange={handleFilterChange} />
@@ -130,12 +195,26 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
       <div className="mt-4">
         {isLoading ? (
           <LoadingBlock />
-        ) : filteredProposals.length ? (
-          <div className="divide-y divide-border-default">
-            {filteredProposals.map((proposal) => (
+        ) : displayProposals.length ? (
+          <div
+            className={cn(
+              "divide-y divide-border-default transition-opacity duration-200",
+              priorityVoteSortPending && "opacity-60",
+            )}
+          >
+            {displayProposals.map((proposal) => (
               <ProposalListItem
                 key={proposal.id}
                 proposal={proposal}
+                walletHasVotedOnActive={
+                  proposal.state === ProposalState.Active
+                    ? isConnected && address
+                      ? voteBatchLoading || !byProposalId
+                        ? null
+                        : (byProposalId[proposal.proposal_id] ?? null)
+                      : undefined
+                    : undefined
+                }
               />
             ))}
           </div>

@@ -72,6 +72,7 @@ export type RawTransaction = BaseTransaction & {
 export type PaginationOpts = { limit: number; skip?: number };
 
 export type ProposalSortOption =
+  | "priority-desc"
   | "created-desc"
   | "created-asc"
   | "vote_count-desc"
