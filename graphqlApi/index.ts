@@ -15,7 +15,7 @@ import {
   Vote,
   User,
 } from "@/types";
-import { ApiProposal } from "./types";
+import { ApiDelegate, ApiProposal } from "./types";
 import type {
   OrderDirection,
   Proposal_OrderBy,
@@ -82,7 +82,7 @@ function formatExecution(
       return item as RawTransaction;
     });
   } catch {
-    console.log("Failed to parse execution");
+    console.error("Failed to parse execution");
     return [];
   }
 }
@@ -96,7 +96,7 @@ function formatSimulation(
     const result = JSON.parse(simulation);
     return Array.isArray(result) ? result : [];
   } catch {
-    console.log("Failed to parse simulation");
+    console.error("Failed to parse simulation");
     return [];
   }
 }
@@ -360,7 +360,7 @@ export function createApi(uri: string) {
       });
 
       return (
-        data?.delegates?.map((delegate: any) => ({
+        data?.delegates?.map((delegate: ApiDelegate) => ({
           id: delegate.id,
           address: delegate.user?.id ?? "",
           votingPower: delegate.voting_power,
