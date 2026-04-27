@@ -81,8 +81,8 @@ function formatExecution(
       // Old RawTransaction format has 'to'
       return item as RawTransaction;
     });
-  } catch {
-    console.error("Failed to parse execution");
+  } catch (error) {
+    console.error("Failed to parse execution", error);
     return [];
   }
 }
@@ -95,8 +95,8 @@ function formatSimulation(
   try {
     const result = JSON.parse(simulation);
     return Array.isArray(result) ? result : [];
-  } catch {
-    console.error("Failed to parse simulation");
+  } catch (error) {
+    console.error("Failed to parse simulation", error);
     return [];
   }
 }
