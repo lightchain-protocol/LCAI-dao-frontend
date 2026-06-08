@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users } from "lucide-react";
-import { compactNumber } from "@/lib/utils";
+import { cn, compactNumber } from "@/lib/utils";
 import $dayjs from "@/lib/dayjs";
 import ProposalStatusBadge from "@/components/proposal/proposal-status-badge";
 import { ProposalState, ProposalStateLabel } from "@/lib/constents";
@@ -14,20 +14,39 @@ import { faSparkle } from "@fortawesome/pro-regular-svg-icons";
 interface ProposalListItemProps {
   proposal: Proposal;
   isStatusBadge?: boolean;
+  walletHasVotedOnActive?: boolean | null;
 }
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>;
 
 
-export function ProposalListItem({ proposal, isStatusBadge = true }: ProposalListItemProps) {
+export function ProposalListItem({
+  proposal,
+  isStatusBadge = true,
+  walletHasVotedOnActive,
+}: ProposalListItemProps) {
   const votingPower = Number(proposal.scores_total_parsed ?? 0);
   const proposalStateLabel = ProposalStateLabel[proposal.state];
   const proposalBadgeVariant = ((proposalStateLabel as BadgeVariant) ?? "default").toLowerCase();
 
+  const voteParticipationBadge =
+    proposal.state === ProposalState.Active &&
+    (walletHasVotedOnActive === true || walletHasVotedOnActive === false)
+      ? { voted: walletHasVotedOnActive }
+      : null;
+
+  const isPriorityTierZeroRow =
+    !!voteParticipationBadge && !voteParticipationBadge.voted;
+
   return (
     <Link
       href={`/proposal/${proposal.id}`}
-      className="sm:py-8 py-5 px-6 block transition-all duration-300 hover:bg-surface-soft hover:border-surface-soft/20"
+      className={cn(
+        "sm:py-8 py-5 px-6 block border-l-2 border-l-transparent transition-all duration-300",
+        isPriorityTierZeroRow
+          ? "border-l-content-warning-light/50 bg-content-warning-light/[0.045] hover:bg-content-warning-light/[0.08] hover:border-surface-soft/20"
+          : "hover:bg-surface-soft hover:border-surface-soft/20",
+      )}
     >
       <h3 className="text-content-primary flex gap-3 flex-col md:flex-row items-baseline justify-between font-semibold leading-[1.2] tracking-[-0.24px] sm:text-xl text-lg capitalize">
         <span>
@@ -97,6 +116,32 @@ export function ProposalListItem({ proposal, isStatusBadge = true }: ProposalLis
               </div>
             </>
           )}
+        {voteParticipationBadge && (
+          <span className="inline-flex items-center gap-x-2 animate-in fade-in-0 duration-300 motion-reduce:animate-none motion-reduce:opacity-100">
+            <span className="hidden sm:block">
+              <FontAwesomeIcon icon={faSparkle} className="size-3.5" />
+            </span>
+            {voteParticipationBadge.voted ? (
+              <Badge
+                variant="outline"
+                className="text-xs sm:text-sm font-normal border-border-default text-content-success-light"
+              >
+                ✓ Voted
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium border-content-warning-light/50 bg-transparent text-content-warning-light"
+              >
+                <span
+                  className="size-1.5 shrink-0 rounded-full bg-content-warning-light shadow-[0_0_0_1px_rgba(0,0,0,0.15)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
+                  aria-hidden
+                />
+                Not voted
+              </Badge>
+            )}
+          </span>
+        )}
       </div>
     </Link>
   );

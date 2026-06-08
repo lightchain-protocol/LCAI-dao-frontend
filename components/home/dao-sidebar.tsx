@@ -6,7 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/common/Button";
 import { Separator } from "@/components/ui/separator";
 import useDelegation from "@/hooks/useDelegation";
-import { compactNumber, formatNumber } from "@/lib/utils";
+import {
+  cn,
+  compactNumber,
+  formatCompactTimeLeft,
+  formatNumber,
+} from "@/lib/utils";
+import { useActiveProposalNotVotedForWallet } from "@/hooks/useActiveProposalNotVotedForWallet";
+import type { ProposalGovernanceSignals } from "@/hooks/useProposalGovernanceSignals";
 import type { SpaceStats, Delegation } from "@/types";
 import useCurrentChain from "@/hooks/useCurrentChain";
 import config from "@/config";
@@ -15,17 +22,23 @@ import useDexPrice from "@/hooks/useDexPrice";
 
 interface DaoSidebarProps {
   spaceStats: SpaceStats | null;
+  governanceSignals: ProposalGovernanceSignals;
+  governanceSignalsFromServer: ProposalGovernanceSignals | null;
   userDelegation: Delegation | null;
   onDelegateClick: () => void;
   onBallotsLockerClick: () => void;
+  onActiveProposalsClick?: () => void;
   isLoading?: boolean;
 }
 
 export function DaoSidebar({
   spaceStats,
+  governanceSignals,
+  governanceSignalsFromServer,
   userDelegation,
   onDelegateClick,
   onBallotsLockerClick,
+  onActiveProposalsClick,
   isLoading,
 }: DaoSidebarProps) {
   const chain = useCurrentChain();
@@ -64,6 +77,127 @@ export function DaoSidebar({
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
+  const govDisplay = governanceSignals;
+  const govFromServer = governanceSignalsFromServer;
+
+  const proposalTotalDisplay = spaceStats?.proposalCount || 0;
+
+  const [urgencyClock, setUrgencyClock] = useState(0);
+  useEffect(() => {
+    if (govFromServer?.nextEndTime == null) return;
+    const id = window.setInterval(() => {
+      setUrgencyClock((n) => n + 1);
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [govFromServer?.nextEndTime]);
+
+  const endsInCompact = useMemo(() => {
+    const endUnix = govFromServer?.nextEndTime;
+    if (endUnix == null) return null;
+    const ms = Number(endUnix) * 1000 - Date.now();
+    return formatCompactTimeLeft(ms);
+  }, [govFromServer?.nextEndTime, urgencyClock]);
+
+  const msRemainingUntilEnd = useMemo(() => {
+    const endUnix = govFromServer?.nextEndTime;
+    if (endUnix == null) return null;
+    return Math.max(0, Number(endUnix) * 1000 - Date.now());
+  }, [govFromServer?.nextEndTime, urgencyClock]);
+
+  const endsInSublineColorClass = useMemo(() => {
+    if (msRemainingUntilEnd == null) return "text-content-default";
+    const ms = msRemainingUntilEnd;
+    if (ms <= 6 * 60 * 60 * 1000) return "text-content-error-light";
+    if (ms < 24 * 60 * 60 * 1000) return "text-content-warning-light";
+    return "text-content-default";
+  }, [msRemainingUntilEnd]);
+
+  const showActiveVotingStatus =
+    govDisplay.activeCount > 0 && isConnected;
+
+  const { notVotedCount: walletNotVoted, isLoading: walletNotVotedLoading } =
+    useActiveProposalNotVotedForWallet(govDisplay.activeProposalIds);
+
+  const activeNotVotedCount = useMemo(() => {
+    if (!showActiveVotingStatus) return null;
+    if (!isConnected || govDisplay.activeProposalIds.length === 0) {
+      return null;
+    }
+    if (walletNotVotedLoading) return undefined;
+    if (walletNotVoted === null) return undefined;
+    return walletNotVoted;
+  }, [
+    showActiveVotingStatus,
+    isConnected,
+    govDisplay.activeProposalIds,
+    walletNotVotedLoading,
+    walletNotVoted,
+  ]);
+
+  const showActiveNotVotedParenthetical =
+    typeof activeNotVotedCount === "number" && activeNotVotedCount > 0;
+  const showActiveAllVotedLine =
+    typeof activeNotVotedCount === "number" && activeNotVotedCount === 0;
+
+  const showActiveEndsIn =
+    govFromServer != null &&
+    govFromServer.activeCount > 0 &&
+    endsInCompact != null &&
+    !showActiveAllVotedLine;
+
+  const activeSublineClass = "w-full pl-3 text-xs leading-snug";
+
+  const activeRowShellClass = cn(
+    "flex w-full flex-col gap-0.5 rounded-md py-0.5 text-left",
+    onActiveProposalsClick &&
+      "transition-colors hover:bg-surface-soft active:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  );
+
+  const activeRowInner = (
+    <>
+      <div className="flex w-full justify-between gap-2 items-start text-sm">
+        <span className="shrink-0 font-semibold text-content-primary">
+          Active
+        </span>
+        <span className="min-w-0 text-right font-mono tabular-nums leading-snug">
+          <span className="font-semibold text-content-primary">
+            {compactNumber(govDisplay.activeCount)}
+          </span>
+          {showActiveNotVotedParenthetical ? (
+            <span className="font-normal">
+              <span className="text-content-secondary"> (</span>
+              <span className="text-content-warning-light">
+                {activeNotVotedCount} not voted
+              </span>
+              <span className="text-content-secondary">)</span>
+            </span>
+          ) : null}
+        </span>
+      </div>
+      {showActiveAllVotedLine && (
+        <p
+          className={cn(
+            activeSublineClass,
+            "font-sans font-normal text-content-success-light",
+          )}
+        >
+          ✓ All voted
+        </p>
+      )}
+      {showActiveEndsIn && (
+        <p
+          className={cn(
+            activeSublineClass,
+            "tabular-nums font-mono",
+            endsInSublineColorClass,
+          )}
+        >
+          Ends in {endsInCompact}
+        </p>
+      )}
+    </>
+  );
+
   return (
     <Card className="gap-4">
       <CardHeader>
@@ -77,11 +211,39 @@ export function DaoSidebar({
         ) : (
           <>
             <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-content-secondary">Proposals</span>
-                <span className="font-medium text-content-primary">
-                  {compactNumber(spaceStats?.proposalCount || 0)}
-                </span>
+              <div className="space-y-1">
+                <div className="flex justify-between gap-2 text-sm items-start py-0.5">
+                  <span className="shrink-0 text-content-secondary">
+                    Proposals
+                  </span>
+                  <span className="min-w-0 text-right font-mono tabular-nums">
+                    <span className="font-medium text-content-primary">
+                      {compactNumber(proposalTotalDisplay)}
+                    </span>{" "}
+                    <span className="font-sans font-normal text-content-secondary">
+                      total
+                    </span>
+                  </span>
+                </div>
+                {onActiveProposalsClick ? (
+                  <button
+                    type="button"
+                    onClick={onActiveProposalsClick}
+                    className={activeRowShellClass}
+                  >
+                    {activeRowInner}
+                  </button>
+                ) : (
+                  <div className={activeRowShellClass}>{activeRowInner}</div>
+                )}
+                <div className="flex justify-between gap-2 text-sm items-start py-0.5">
+                  <span className="shrink-0 text-content-secondary">
+                    Pending
+                  </span>
+                  <span className="min-w-0 text-right font-normal text-content-secondary font-mono tabular-nums">
+                    {compactNumber(govDisplay.pendingCount)}
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-content-secondary">Delegates</span>

@@ -256,11 +256,17 @@ export function createApi(uri: string) {
 
       delete _filters.labels;
 
-      // Parse sort option into orderBy + orderDirection
-      const [orderBy, orderDirection] = sortBy.split("-") as [
-        Proposal_OrderBy,
-        OrderDirection
-      ];
+      let orderBy: Proposal_OrderBy;
+      let orderDirection: OrderDirection;
+      if (sortBy === "priority-desc") {
+        orderBy = "end_time";
+        orderDirection = "asc";
+      } else {
+        [orderBy, orderDirection] = sortBy.split("-") as [
+          Proposal_OrderBy,
+          OrderDirection,
+        ];
+      }
 
       const cancelledFilter =
         "cancelled" in _filters ? _filters.cancelled : false;
