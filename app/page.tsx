@@ -6,6 +6,7 @@ import { DelegateModal } from "@/components/delegation/delegate-modal";
 import Governance from "@/components/governance/governance";
 import { DaoSidebar } from "@/components/home/dao-sidebar";
 import { ParticipantsList } from "@/components/home/participants-list";
+import { VotingPowerView } from "@/components/home/voting-power-view";
 import { ProposalsList } from "@/components/home/proposals-list";
 import { RecentProposals } from "@/components/home/recent-proposals";
 import { RisingDelegates } from "@/components/home/rising-delegates";
@@ -16,7 +17,7 @@ import config from "@/config";
 import useCurrentChain from "@/hooks/useCurrentChain";
 import useGraphqlApi from "@/hooks/useGraphqlApi";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Home, Settings, Users, Wallet } from "lucide-react";
+import { FileText, Home, Settings, Users, Vote, Wallet } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useConnection } from "wagmi";
 export default function HomePage() {
@@ -41,7 +42,9 @@ export default function HomePage() {
       api.loadProposals({ limit: 20, skip: 0 }, Math.floor(Date.now() / 1000)),
   });
 
-  // Fetch delegates
+  // Participants = addresses that have engaged with governance (delegated),
+  // from the indexer. Holding LCAI alone is not participation, so this stays
+  // the delegate list; the raw voting-power distribution lives in its own tab.
   const {
     isLoading: isLoadingDelegates,
     data: delegates = [],
@@ -91,6 +94,10 @@ export default function HomePage() {
           <TabsTrigger value="participants" className={tabTriggerClassName}>
             <Users className="h-4 w-4" />
             Participants
+          </TabsTrigger>
+          <TabsTrigger value="voting-power" className={tabTriggerClassName}>
+            <Vote className="h-4 w-4" />
+            Power Distribution
           </TabsTrigger>
           <TabsTrigger value="treasury" className={tabTriggerClassName}>
             <Wallet className="h-4 w-4" />
@@ -165,6 +172,10 @@ export default function HomePage() {
             delegates={delegates}
             isLoading={isLoadingDelegates}
           />
+        </TabsContent>
+
+        <TabsContent value="voting-power">
+          <VotingPowerView />
         </TabsContent>
 
         <TabsContent value="treasury">
