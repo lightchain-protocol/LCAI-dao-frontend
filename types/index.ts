@@ -185,6 +185,11 @@ export type Delegate = {
   created: number;
   updated: number;
   user: User | null;
+  // True when the address is a contract (treasury, bridge, system predeploys).
+  // These hold voting power on-chain but cannot cast votes.
+  isContract?: boolean;
+  // Friendly name for a known contract (e.g. "Treasury"), when recognized.
+  label?: string;
 };
 
 export type Delegation = {

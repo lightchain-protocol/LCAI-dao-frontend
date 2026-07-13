@@ -26,8 +26,8 @@ export function DelegateListItem({
     return `https://effigy.im/a/${address}.png`;
   };
 
-  // const label = delegate.user?.displayName ?? truncateAddress(delegate.address);
-  const label = truncateAddress(delegate.address);
+  const truncatedAddress = truncateAddress(delegate.address);
+  const displayName = delegate.label ?? truncatedAddress;
 
   return (
     <div
@@ -43,7 +43,10 @@ export function DelegateListItem({
       )}
 
       <Avatar className="h-10 w-10">
-        <AvatarImage src={generateAvatarUrl(delegate.address)} alt={label} />
+        <AvatarImage
+          src={generateAvatarUrl(delegate.address)}
+          alt={displayName}
+        />
         <AvatarFallback>
           {delegate.address.slice(2, 4).toUpperCase()}
         </AvatarFallback>
@@ -56,13 +59,28 @@ export function DelegateListItem({
             className="font-medium text-content-primary truncate hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
-            {label}
+            {displayName}
           </Link>
+
+          {delegate.label && (
+            <span className="shrink-0 text-xs text-content-secondary">
+              {truncatedAddress}
+            </span>
+          )}
 
           <CopyButton
             text={delegate.address}
             className="size-6 shrink-0 text-content-muted hover:text-content-primary [&_svg:not([class*='size-'])]:size-3"
           />
+
+          {delegate.isContract && (
+            <Badge
+              variant="outline"
+              className="shrink-0 text-[10px] font-normal text-content-secondary"
+            >
+              Contract, cannot vote
+            </Badge>
+          )}
         </div>
       </div>
 

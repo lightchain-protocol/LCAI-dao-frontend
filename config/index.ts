@@ -3,14 +3,46 @@ import { lcai, lcaiTestnet } from "./chains";
 import { Chain } from "viem";
 import { mainnet } from "viem/chains";
 
+// Display name for the operational reserve EOA (team-controlled, can vote, but
+// separate from independent community). Shared so the label and the totals that
+// exclude it stay in sync.
+const OPERATIONAL_RESERVE_LABEL = "Operational reserve";
+
 const config = {
   chains: [lcai] as [Chain, ...Chain[]],
+
+  reserveLabel: OPERATIONAL_RESERVE_LABEL,
 
   indexerName: {
     [mainnet.id]: "mainnet",
     [lcaiTestnet.id]: "lcai",
     [lcai.id]: "lcai",
   },
+
+  // Blockscout API base used to enumerate token holders for the participants view.
+  explorerApiUrl: {
+    [mainnet.id]: "https://eth.blockscout.com",
+    [lcai.id]: "https://mainnet.lightscan.app",
+    [lcaiTestnet.id]: "https://testnet.lightscan.app",
+  } as Record<number, string>,
+
+  // Friendly names for known addresses (contracts and known EOAs like the team
+  // wallet), shown in the power-distribution list so they are recognizable, not
+  // just raw addresses. Keys lowercased.
+  addressLabels: {
+    [lcai.id]: {
+      "0x786ede8c42ca54e54c9dceca9b30052cf4743389": "Treasury",
+      "0xec7096a3116ee769457c939617375ec1785aa6f1": "Bridge",
+      "0xfbe810101064e326f871bf20576d8e42c75d5dd7": OPERATIONAL_RESERVE_LABEL,
+      "0xd216a0c0050edc3a9e0449ecfdf178a1652b4b68": "Governor",
+      "0xc783376c8237e8f1ed17d825ce7cbb4c22e3cae5": "Timelock",
+      "0x0000000000000000000000000000000000001001": "NativeVotes",
+      "0x0000000000000000000000000000000000001002": "WorkerRegistry",
+      "0x0000000000000000000000000000000000001003": "Staking",
+      "0x0000000000000000000000000000000000001004": "FeePool",
+      "0x0000000000000000000000000000000000001005": "Rewards",
+    },
+  } as Record<number, Record<string, string>>,
 
   blockTimeSeconds: {
     [mainnet.id]: 12,
