@@ -44,6 +44,7 @@ export function DelegateModal({
   const [mode, setMode] = useState<"self" | "custom">("self");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [votingPower, setVotingPower] = useState("0");
+  const [tokenBalance, setTokenBalance] = useState("0");
   const [currentDelegate, setCurrentDelegate] = useState<string | null>(null);
 
   const loadUserState = useCallback(async () => {
@@ -51,6 +52,7 @@ export function DelegateModal({
     try {
       const state = await fetchDelegationState(address);
       setVotingPower(state.votingPowerFormatted);
+      setTokenBalance(state.tokenBalanceFormatted);
       setCurrentDelegate(state.currentDelegate);
     } catch (error) {
       console.error("Failed to load user state:", error);
@@ -117,6 +119,21 @@ export function DelegateModal({
   const actionLabel = isReturningVotes ? "Return votes" : "Delegate";
   const loadingLabel = isReturningVotes ? "Returning votes..." : "Delegating...";
 
+  // You delegate the weight of the tokens you hold (your balance), not your
+  // current voting power. They differ once you delegate away or receive
+  // delegations from others.
+  const balanceAmount = parseFloat(tokenBalance);
+  const votingPowerAmount = parseFloat(votingPower);
+
+  // Votes others delegated to you. These are not yours to re-delegate, so they
+  // never count toward the amount you can delegate.
+  const ownContribution = isDelegatedElsewhere ? 0 : balanceAmount;
+  const incomingVotes = Math.max(0, votingPowerAmount - ownContribution);
+
+  // Delegation moves the weight of tokens you hold. With a zero balance there
+  // is nothing to delegate, even if others delegated voting power to you.
+  const canDelegate = balanceAmount > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -135,9 +152,11 @@ export function DelegateModal({
                 Currently delegated to
               </p>
               <p className="font-medium text-content-primary">
-                {currentDelegate.toLowerCase() === address?.toLowerCase()
-                  ? "Yourself"
-                  : truncateAddress(currentDelegate)}
+                {isDelegatedElsewhere
+                  ? `${truncateAddress(currentDelegate)} (your ${compactNumber(
+                      balanceAmount,
+                    )} LCAI)`
+                  : "Yourself"}
               </p>
             </div>
           )}
@@ -251,16 +270,42 @@ export function DelegateModal({
 
           <Separator />
 
-          <div className="flex justify-between text-sm">
-            <span className="text-content-secondary">Voting power to delegate</span>
-            <span className="font-medium text-content-primary">
-              {compactNumber(parseFloat(votingPower))} LCAI
-            </span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-content-secondary">Your LCAI balance</span>
+              <span className="font-medium text-content-primary">
+                {compactNumber(balanceAmount)} LCAI
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-content-secondary">Your voting power</span>
+              <span className="font-medium text-content-primary">
+                {compactNumber(votingPowerAmount)}
+              </span>
+            </div>
+            {incomingVotes > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-content-secondary">Delegated to you</span>
+                <span className="font-medium text-content-primary">
+                  {compactNumber(incomingVotes)} LCAI
+                </span>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-content-secondary">
-            Delegation assigns your full voting power. It cannot be split into a
-            partial amount, and your tokens never leave your wallet.
-          </p>
+
+          {canDelegate ? (
+            <p className="text-xs text-content-secondary">
+              You will delegate the full weight of your {compactNumber(balanceAmount)}{" "}
+              LCAI. It cannot be split into a partial amount, and your tokens never
+              leave your wallet.
+            </p>
+          ) : (
+            <p className="text-xs text-amber-500">
+              You hold 0 LCAI, so there is nothing to delegate. Your{" "}
+              {compactNumber(votingPowerAmount)} voting power was delegated to you by
+              others and cannot be re-delegated.
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3">
@@ -279,6 +324,7 @@ export function DelegateModal({
             disabled={
               isLoading ||
               !address ||
+              !canDelegate ||
               (mode === "custom" && !isAddress(customAddress))
             }
           >
