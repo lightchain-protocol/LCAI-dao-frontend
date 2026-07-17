@@ -299,9 +299,7 @@ export default function CreateProposal() {
 
       return createProposal(actions, fullDescription);
     },
-    onSuccess: (proposalId) => {
-      console.log("Proposal created with ID:", proposalId);
-
+    onSuccess: () => {
       toast.success("Proposal created successfully!");
       router.push("/");
     },
