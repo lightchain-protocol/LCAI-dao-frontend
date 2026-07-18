@@ -39,4 +39,10 @@ describe("formatCompactTimeLeft", () => {
     expect(formatProposalEndRelative(endUnix)).toBe("in 2 hours");
     expect(formatCompactTimeLeftFromUnix(endUnix)).toBe("2h");
   });
+
+  it("returns null for an already-ended timestamp", () => {
+    vi.setSystemTime(new Date("2026-07-18T12:00:00.000Z"));
+    const endUnix = $dayjs().subtract(1, "minute").unix();
+    expect(formatCompactTimeLeftFromUnix(endUnix)).toBeNull();
+  });
 });

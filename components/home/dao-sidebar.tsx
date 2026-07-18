@@ -11,6 +11,8 @@ import {
   EMPTY_PROPOSAL_GOVERNANCE_SIGNALS,
   type ProposalGovernanceSignals,
 } from "@/hooks/useProposalGovernanceSignals";
+import { deriveSidebarGovernanceDisplay } from "@/lib/deriveSidebarGovernanceDisplay";
+import { getEndsInUrgencyClass } from "@/lib/getEndsInUrgencyClass";
 import {
   cn,
   compactNumber,
@@ -106,49 +108,45 @@ export function DaoSidebar({
     return Math.max(0, Number(endUnix) * 1000 - Date.now());
   }, [govFromServer?.nextEndTime, urgencyClock]);
 
-  const endsInSublineColorClass = useMemo(() => {
-    if (msRemainingUntilEnd == null) return "text-content-default";
-    const ms = msRemainingUntilEnd;
-    if (ms <= 6 * 60 * 60 * 1000) return "text-content-error-light";
-    if (ms < 24 * 60 * 60 * 1000) return "text-content-warning-light";
-    return "text-content-default";
-  }, [msRemainingUntilEnd]);
+  const endsInSublineColorClass = useMemo(
+    () => getEndsInUrgencyClass(msRemainingUntilEnd),
+    [msRemainingUntilEnd],
+  );
 
   const useMockGovernance =
     process.env.NEXT_PUBLIC_USE_MOCK_PROPOSALS === "true";
 
-  const showActiveVotingStatus =
-    govDisplay.activeCount > 0 && (isConnected || useMockGovernance);
-
   const { notVotedCount: walletNotVoted, isLoading: walletNotVotedLoading } =
     useActiveProposalNotVotedForWallet(govDisplay.activeProposalIds);
 
-  const activeNotVotedCount = useMemo(() => {
-    if (!showActiveVotingStatus) return null;
-    if (!isConnected || govDisplay.activeProposalIds.length === 0) {
-      return null;
-    }
-    if (walletNotVotedLoading) return undefined;
-    if (walletNotVoted === null) return undefined;
-    return walletNotVoted;
-  }, [
-    showActiveVotingStatus,
-    isConnected,
-    govDisplay.activeProposalIds,
-    walletNotVotedLoading,
-    walletNotVoted,
-  ]);
-
-  const showActiveNotVotedParenthetical =
-    typeof activeNotVotedCount === "number" && activeNotVotedCount > 0;
-  const showActiveAllVotedLine =
-    typeof activeNotVotedCount === "number" && activeNotVotedCount === 0;
-
-  const showActiveEndsIn =
-    govFromServer != null &&
-    govFromServer.activeCount > 0 &&
-    endsInCompact != null &&
-    !showActiveAllVotedLine;
+  const {
+    activeNotVotedCount,
+    showActiveNotVotedParenthetical,
+    showActiveAllVotedLine,
+    showActiveEndsIn,
+  } = useMemo(
+    () =>
+      deriveSidebarGovernanceDisplay({
+        activeCount: govDisplay.activeCount,
+        activeProposalIds: govDisplay.activeProposalIds,
+        isConnected,
+        showVotingStatusWhenDisconnected: useMockGovernance,
+        governanceSignalsFromServer: govFromServer,
+        endsInCompact,
+        walletNotVoted,
+        walletNotVotedLoading,
+      }),
+    [
+      govDisplay.activeCount,
+      govDisplay.activeProposalIds,
+      isConnected,
+      useMockGovernance,
+      govFromServer,
+      endsInCompact,
+      walletNotVoted,
+      walletNotVotedLoading,
+    ],
+  );
 
   const activeSublineClass = "w-full pl-3 text-xs leading-snug";
 

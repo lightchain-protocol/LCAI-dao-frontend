@@ -1,6 +1,6 @@
 import useCurrentChain from "@/hooks/useCurrentChain";
 import useGraphqlApi from "@/hooks/useGraphqlApi";
-import { ProposalState } from "@/lib/constents";
+import { aggregateProposalGovernanceSignals } from "@/lib/aggregateProposalGovernanceSignals";
 import { useQuery } from "@tanstack/react-query";
 
 const GOVERNANCE_SIGNALS_INTERVAL_MS = 30_000;
@@ -37,22 +37,7 @@ export function useProposalGovernanceSignals() {
         }),
       ]);
 
-      const active = activeRaw.filter((p) => p.state === ProposalState.Active);
-      const pending = pendingRaw.filter(
-        (p) => p.state === ProposalState.Pending,
-      );
-
-      const nextEndTime =
-        active.length > 0
-          ? Math.min(...active.map((p) => Number(p.end_time)))
-          : null;
-
-      return {
-        activeCount: active.length,
-        pendingCount: pending.length,
-        nextEndTime: Number.isFinite(nextEndTime) ? nextEndTime : null,
-        activeProposalIds: active.map((p) => p.proposal_id),
-      };
+      return aggregateProposalGovernanceSignals(activeRaw, pendingRaw);
     },
     refetchInterval: GOVERNANCE_SIGNALS_INTERVAL_MS,
   });
