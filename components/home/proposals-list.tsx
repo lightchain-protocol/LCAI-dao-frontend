@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  useDeferredValue,
+} from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
@@ -12,31 +19,48 @@ import type { ProposalFilters } from "@/components/proposal/ProposalFilter";
 import { ProposalListItem } from "@/components/proposal/proposal-list-item";
 import LoadingBlock from "@/components/loading-block";
 import useGraphqlApi from "@/hooks/useGraphqlApi";
+import { useGovernorHasVotedBatch } from "@/hooks/useGovernorHasVotedBatch";
+import { getWalletVoteStatusOnActive } from "@/lib/getWalletVoteStatusOnActive";
+import { sortProposalsByPriorityDesc } from "@/lib/sortProposalsByPriorityDesc";
+import { cn } from "@/lib/utils";
+import { ProposalState } from "@/lib/constents";
 import type { ProposalSortOption, ProposalsFilter } from "@/types";
 
 interface ProposalsListProps {
   spaceId: string;
+  /** Increment from parent (e.g. sidebar) to apply Active status filter when opening this tab. */
+  activeListFocusToken?: number;
 }
 
-export function ProposalsList({ spaceId }: ProposalsListProps) {
+export function ProposalsList({
+  spaceId,
+  activeListFocusToken = 0,
+}: ProposalsListProps) {
   const { theme } = useTheme();
   const api = useGraphqlApi();
-  const { address } = useConnection();
+  const { address, isConnected } = useConnection();
 
   const [filters, setFilters] = useState<ProposalFilters>({
     status: "all",
     createdBy: "all",
     search: "",
-    sortBy: "created-desc",
+    sortBy: "priority-desc",
     hasExecution: "all",
     minVotes: "",
   });
+
+  const lastActiveFocusToken = useRef(0);
+  useEffect(() => {
+    if (activeListFocusToken > lastActiveFocusToken.current) {
+      lastActiveFocusToken.current = activeListFocusToken;
+      setFilters((prev) => ({ ...prev, status: "active" }));
+    }
+  }, [activeListFocusToken]);
 
   const handleFilterChange = useCallback((name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Build API filter from UI state
   const apiFilter = useMemo((): ProposalsFilter => {
     const f: ProposalsFilter = {};
 
@@ -57,7 +81,6 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
       f.state = apiStateMap[filters.status];
     }
 
-    // Min votes
     if (filters.minVotes && parseInt(filters.minVotes) > 0) {
       f.vote_count_gte = parseInt(filters.minVotes);
     }
@@ -83,18 +106,15 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
       ),
   });
 
-  // Client-side filtering for createdBy (needs wallet address) and hasExecution
   const filteredProposals = useMemo(() => {
     return proposals.filter((proposal) => {
-      // Client-side sub-filter: API only supports active/pending/closed,
-      // so we refine closed results by exact ProposalState
       const stateMap: Record<string, number[]> = {
-        succeeded: [4], // ProposalState.Succeeded
-        queued: [5], // ProposalState.Queued
-        defeated: [3], // ProposalState.Defeated
-        canceled: [2], // ProposalState.Canceled
-        expired: [6], // ProposalState.Expired
-        executed: [7], // ProposalState.Executed
+        succeeded: [4],
+        queued: [5],
+        defeated: [3],
+        canceled: [2],
+        expired: [6],
+        executed: [7],
       };
       if (
         filters.status !== "all" &&
@@ -104,14 +124,12 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
         return false;
       }
 
-      // CreatedBy filter
       if (filters.createdBy === "me" && address) {
         if (proposal.author.id.toLowerCase() !== address.toLowerCase()) {
           return false;
         }
       }
 
-      // Has execution filter
       if (filters.hasExecution === "yes" && proposal.executions.length === 0) {
         return false;
       }
@@ -129,6 +147,45 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
     address,
   ]);
 
+  const proposalIdsForVoteLookup = useMemo(() => {
+    if (filters.sortBy === "priority-desc") {
+      return filteredProposals.map((p) => p.proposal_id);
+    }
+    return filteredProposals
+      .filter((p) => p.state === ProposalState.Active)
+      .map((p) => p.proposal_id);
+  }, [filteredProposals, filters.sortBy]);
+
+  const { byProposalId, isLoading: voteBatchLoading } =
+    useGovernorHasVotedBatch(proposalIdsForVoteLookup);
+
+  const sortedFilteredProposals = useMemo(() => {
+    if (filters.sortBy !== "priority-desc") {
+      return filteredProposals;
+    }
+    return sortProposalsByPriorityDesc(filteredProposals, {
+      isConnected,
+      address,
+      byProposalId,
+      voteBatchLoading,
+    });
+  }, [
+    filteredProposals,
+    filters.sortBy,
+    byProposalId,
+    voteBatchLoading,
+    address,
+    isConnected,
+  ]);
+
+  const displayProposals = useDeferredValue(sortedFilteredProposals);
+
+  const priorityVoteSortPending =
+    filters.sortBy === "priority-desc" &&
+    isConnected &&
+    !!address &&
+    voteBatchLoading;
+
   return (
     <div>
       <ProposalFilter filters={filters} onFilterChange={handleFilterChange} />
@@ -136,10 +193,26 @@ export function ProposalsList({ spaceId }: ProposalsListProps) {
       <div className="mt-4">
         {isLoading ? (
           <LoadingBlock />
-        ) : filteredProposals.length ? (
-          <div className="divide-y divide-border-default">
-            {filteredProposals.map((proposal) => (
-              <ProposalListItem key={proposal.id} proposal={proposal} />
+        ) : displayProposals.length ? (
+          <div
+            className={cn(
+              "divide-y divide-border-default transition-opacity duration-200",
+              priorityVoteSortPending && "opacity-60",
+            )}
+          >
+            {displayProposals.map((proposal) => (
+              <ProposalListItem
+                key={proposal.id}
+                proposal={proposal}
+                walletHasVotedOnActive={getWalletVoteStatusOnActive(
+                  proposal.state,
+                  isConnected,
+                  address,
+                  voteBatchLoading,
+                  byProposalId,
+                  proposal.proposal_id,
+                )}
+              />
             ))}
           </div>
         ) : (
