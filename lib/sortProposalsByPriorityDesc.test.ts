@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ProposalState } from "@/lib/constents";
+import {
+  buildMockGovernanceProposals,
+  mockProposalIds,
+} from "@/lib/testFixtures/governanceProposals";
 import { sortProposalsByPriorityDesc } from "@/lib/sortProposalsByPriorityDesc";
 import type { Proposal } from "@/types";
 
@@ -53,7 +57,7 @@ describe("sortProposalsByPriorityDesc", () => {
         "voted-active": true,
         "active-late": false,
         "active-soon": false,
-        "pending": false,
+        pending: false,
         "voted-pending": true,
       },
     });
@@ -65,6 +69,40 @@ describe("sortProposalsByPriorityDesc", () => {
       "voted-pending",
       "voted-active",
     ]);
+  });
+
+  it("prioritizes urgent active mock proposals the wallet has not voted on", () => {
+    const proposals = buildMockGovernanceProposals();
+
+    const result = sortProposalsByPriorityDesc(proposals, {
+      isConnected: true,
+      address: "0xabc",
+      voteBatchLoading: false,
+      byProposalId: {
+        "88f79": true,
+        "9011d": false,
+        "4e13c": false,
+        "4b071": false,
+        "320b7": true,
+      },
+    });
+
+    expect(result.map((p) => p.proposal_id)).toEqual([
+      "9011d",
+      "4e13c",
+      "4b071",
+      "320b7",
+      "88f79",
+    ]);
+    expect(result[0].title).toBe("Should LCAI Be Tradable Before Mainnet?");
+  });
+
+  it("uses all mock proposal ids for fixture coverage", () => {
+    const proposals = buildMockGovernanceProposals();
+    expect(proposals.map((p) => p.proposal_id)).toEqual(mockProposalIds());
+    expect(proposals.filter((p) => p.state === ProposalState.Active)).toHaveLength(
+      4,
+    );
   });
 
   it("treats disconnected wallets as not voted for tiering", () => {
