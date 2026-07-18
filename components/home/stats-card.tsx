@@ -1,12 +1,13 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
   title: string;
-  value: string | number;
-  icon?: React.ReactNode;
+  value: ReactNode;
+  icon?: ReactNode;
   className?: string;
 }
 
@@ -19,9 +20,11 @@ export function StatsCard({ title, value, icon, className }: StatsCardProps) {
             {icon}
           </div>
         )}
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm leading-[1.42] text-content-secondary">{title}</p>
-          <p className="text-2xl font-semibold leading-[1.33] text-content-primary">{value}</p>
+          <div className="flex flex-wrap items-baseline gap-x-1 text-2xl font-semibold leading-[1.33] text-content-primary">
+            {value}
+          </div>
         </div>
       </CardContent>
     </Card>
