@@ -1,7 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { formatCompactTimeLeft } from "@/lib/utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import $dayjs from "@/lib/dayjs";
+import {
+  formatCompactTimeLeft,
+  formatCompactTimeLeftFromUnix,
+  formatProposalEndRelative,
+} from "@/lib/utils";
 
 describe("formatCompactTimeLeft", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("returns null for non-positive or invalid input", () => {
     expect(formatCompactTimeLeft(0)).toBeNull();
     expect(formatCompactTimeLeft(-1)).toBeNull();
@@ -21,5 +30,13 @@ describe("formatCompactTimeLeft", () => {
   it("matches mock proposal time-left labels from data/mock/proposals.json", () => {
     expect(formatCompactTimeLeft(6 * 24 * 60 * 60_000)).toBe("6d");
     expect(formatCompactTimeLeft(14 * 24 * 60 * 60_000)).toBe("14d");
+  });
+
+  it("aligns compact sidebar labels with proposal list fromNow rounding", () => {
+    vi.setSystemTime(new Date("2026-07-18T12:00:00.000Z"));
+    const endUnix = $dayjs().add(110, "minute").unix();
+
+    expect(formatProposalEndRelative(endUnix)).toBe("in 2 hours");
+    expect(formatCompactTimeLeftFromUnix(endUnix)).toBe("2h");
   });
 });
