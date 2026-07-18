@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { useConnection } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/common/Button";
 import { ProposalListItem } from "@/components/proposal/proposal-list-item";
+import { useGovernorHasVotedBatch } from "@/hooks/useGovernorHasVotedBatch";
+import { getWalletVoteStatusOnActive } from "@/lib/getWalletVoteStatusOnActive";
+import { sortProposalsByPriorityDesc } from "@/lib/sortProposalsByPriorityDesc";
 import { ArrowRight } from "lucide-react";
 import type { Proposal } from "@/types";
 
@@ -18,7 +23,25 @@ export function RecentProposals({
   isLoading,
   onViewAll,
 }: RecentProposalsProps) {
-  const recentProposals = proposals.slice(0, 3);
+  const { address, isConnected } = useConnection();
+
+  const proposalIdsForVoteLookup = useMemo(
+    () => proposals.map((p) => p.proposal_id),
+    [proposals],
+  );
+
+  const { byProposalId, isLoading: voteBatchLoading } =
+    useGovernorHasVotedBatch(proposalIdsForVoteLookup);
+
+  const recentProposals = useMemo(() => {
+    const sorted = sortProposalsByPriorityDesc(proposals, {
+      isConnected,
+      address,
+      byProposalId,
+      voteBatchLoading,
+    });
+    return sorted.slice(0, 3);
+  }, [proposals, isConnected, address, byProposalId, voteBatchLoading]);
 
   return (
     <Card className="gap-0 py-0 overflow-hidden">
@@ -46,6 +69,14 @@ export function RecentProposals({
                 key={proposal.id}
                 proposal={proposal}
                 isStatusBadge={false}
+                walletHasVotedOnActive={getWalletVoteStatusOnActive(
+                  proposal.state,
+                  isConnected,
+                  address,
+                  voteBatchLoading,
+                  byProposalId,
+                  proposal.proposal_id,
+                )}
               />
             ))}
           </div>
