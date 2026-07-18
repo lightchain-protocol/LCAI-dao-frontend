@@ -34,7 +34,9 @@ export function deriveSidebarGovernanceDisplay({
 
   let activeNotVotedCount: number | null | undefined = null;
   if (showActiveVotingStatus) {
-    if (!isConnected || activeProposalIds.length === 0) {
+    if (activeProposalIds.length === 0) {
+      activeNotVotedCount = null;
+    } else if (!isConnected && !showVotingStatusWhenDisconnected) {
       activeNotVotedCount = null;
     } else if (walletNotVotedLoading || walletNotVoted === null) {
       activeNotVotedCount = undefined;

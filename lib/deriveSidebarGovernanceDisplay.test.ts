@@ -85,21 +85,21 @@ describe("deriveSidebarGovernanceDisplay", () => {
     });
   });
 
-  it("allows mock mode to enable voting status without a wallet", () => {
+  it("shows not-voted count in mock mode without a wallet", () => {
     expect(
       deriveSidebarGovernanceDisplay({
         activeCount: 2,
-        activeProposalIds: ["a"],
+        activeProposalIds: ["a", "b"],
         isConnected: false,
         showVotingStatusWhenDisconnected: true,
         governanceSignalsFromServer: serverSignals,
         endsInCompact: "2h",
-        walletNotVoted: 1,
+        walletNotVoted: 2,
         walletNotVotedLoading: false,
       }),
     ).toEqual({
-      activeNotVotedCount: null,
-      showActiveNotVotedParenthetical: false,
+      activeNotVotedCount: 2,
+      showActiveNotVotedParenthetical: true,
       showActiveAllVotedLine: false,
       showActiveEndsIn: true,
     });
