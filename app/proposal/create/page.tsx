@@ -105,16 +105,22 @@ const choices = [
   },
 ] as const;
 
+// Blocks bare URLs and markdown links in free-text fields.
+const URL_PATTERN = /(https?:\/\/|www\.|\]\(https?:\/\/)/i;
+const noUrls = (val: string) => !URL_PATTERN.test(val);
+
 // Zod schema for form validation
 const proposalFormSchema = z.object({
   title: z
     .string()
     .min(1, "Title is required")
-    .min(3, "Title must be at least 3 characters"),
+    .min(3, "Title must be at least 3 characters")
+    .refine(noUrls, "URLs are not allowed in the title"),
   description: z
     .string()
     .min(1, "Description is required")
-    .min(10, "Description must be at least 10 characters"),
+    .min(10, "Description must be at least 10 characters")
+    .refine(noUrls, "URLs are not allowed in the description"),
   // discussion: z
   //   .string()
   //   .refine((val) => val === "" || z.string().url().safeParse(val).success, {
