@@ -3,6 +3,7 @@
 import AiConfig from "@/components/ai-config/ai-config";
 import BallotsLockerModal from "@/components/ballots-locker";
 import { DelegateModal } from "@/components/delegation/delegate-modal";
+import { DunaMembersTab } from "@/components/duna/duna-members-tab";
 import Governance from "@/components/governance/governance";
 import { DaoSidebar } from "@/components/home/dao-sidebar";
 import { ParticipantsList } from "@/components/home/participants-list";
@@ -16,8 +17,8 @@ import config from "@/config";
 import useCurrentChain from "@/hooks/useCurrentChain";
 import useGraphqlApi from "@/hooks/useGraphqlApi";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Home, Settings, Users, Wallet } from "lucide-react";
-import { useCallback, useState } from "react";
+import { FileText, Home, Settings, ShieldCheck, Users, Wallet } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 export default function HomePage() {
   const api = useGraphqlApi();
@@ -26,6 +27,12 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("home");
   const [delegateModalOpen, setDelegateModalOpen] = useState(false);
   const [ballotsLockerOpen, setBallotsLockerOpen] = useState(false);
+
+  // Allow deep-linking to a tab, e.g. /?tab=duna from the DUNA pages.
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab) setActiveTab(tab);
+  }, []);
 
   // Get governor address as space ID
   const spaceId = config.governor[chain.id];
@@ -104,6 +111,10 @@ export default function HomePage() {
             <Settings className="h-4 w-4" />
             AI Config
           </TabsTrigger>
+          <TabsTrigger value="duna" className={tabTriggerClassName}>
+            <ShieldCheck className="h-4 w-4" />
+            DUNA Members
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="home">
@@ -177,6 +188,10 @@ export default function HomePage() {
 
         <TabsContent value="ai-config">
           <AiConfig />
+        </TabsContent>
+
+        <TabsContent value="duna">
+          <DunaMembersTab />
         </TabsContent>
       </Tabs>
 
