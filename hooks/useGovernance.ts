@@ -348,12 +348,11 @@ export function useGovernance() {
 
     const descriptionHash = keccak256(encodePacked(["string"], [description]));
 
-    const { request } = (await governorContract.simulate[action]([
-      targets,
-      values,
-      calldatas,
-      descriptionHash,
-    ])) as SimulateContractReturnType<
+    // cancel is proposer-only, so the simulation must run as the connected wallet
+    const { request } = (await governorContract.simulate[action](
+      [targets, values, calldatas, descriptionHash],
+      { account: address }
+    )) as SimulateContractReturnType<
       typeof governorContract.abi,
       typeof action
     >;
