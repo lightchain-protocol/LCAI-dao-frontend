@@ -281,6 +281,8 @@ export function createApi(uri: string) {
           orderBy,
           orderDirection,
           where: {
+            // DUNA Members proposals live in their own indexer/tab
+            _indexer_not: "duna",
             cancelled: cancelledFilter,
             metadata_: Object.keys(metadataFilters).length
               ? metadataFilters
